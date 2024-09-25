@@ -247,7 +247,16 @@ class _HomeState extends State<Home> {
         setState(() {
           print('adding new user');
           users.add(newUser);
-          users.sort((a, b) => b.qualifierScore.compareTo(a.qualifierScore));
+          users.sort((a, b) => {
+            // Make GetLiberated always in first place :)
+            if (a.id == "76561198083506351") {
+              return -1;
+            }
+            if (b.id == "76561198083506351") {
+              return 1;
+            }
+            return b.qualifierScore.compareTo(a.qualifierScore);
+          });
         });
       } else {
         throw Exception('Failed to load Player data');
