@@ -164,21 +164,34 @@ class _HomeState extends State<Home> {
     );
   }
 
+  String apiURL = 'https://api.beatleader.xyz';
+
   void refresh() async {
     String error = '';
+
+    // Get Map Datas
     setState(() {
       loadingText = 'Getting Map Data...';
     });
     print('Fetching Map Datas');
-    error = await fetchMapDatas(widget.qualifiers);
+    List<Future> mapFutures = [];
+    for (var entry in widget.qualifiers) {
+      mapFutures.add(fetchMapDatas(entry));
+    }
+    await Future.wait(mapFutures);
+    // =============
 
+    // Get Player Datas
     setState(() {
       loadingText = 'Getting Player Datas...';
     });
     print('Fetching player datas');
+    List<Future> playerFutures = [];
     for (var entry in widget.players) {
-      error = await fetchPlayerData(entry);
+      playerFutures.add(fetchPlayerData(entry));
     }
+    await Future.wait(playerFutures);
+    // ============
 
     setState(() {
       loadingText = error.contains('Error') ? error : '';
@@ -191,28 +204,24 @@ class _HomeState extends State<Home> {
     super.initState();
   }
 
-  String apiURL = 'https://api.beatleader.xyz/player/';
-
-  Future<String> fetchMapDatas(List<Qualifier> qualifiers) async {
+  Future<String> fetchMapDatas(Qualifier entry) async {
     try {
-      for (var entry in qualifiers) {
-        print('Sending: https://api.beatleader.xyz/leaderboard/${entry.mapID}');
-        final response = await http.get(
-            Uri.parse('https://api.beatleader.xyz/leaderboard/${entry.mapID}'));
+      print('Sending: $apiURL/leaderboard/${entry.mapID}');
+      final response =
+          await http.get(Uri.parse('$apiURL/leaderboard/${entry.mapID}'));
 
-        if (response.statusCode == 200) {
-          //print('Results: ${response.body}');
-          Map<String, dynamic> data = jsonDecode(response.body);
-          Map<String, dynamic> songdata = data['song'];
+      if (response.statusCode == 200) {
+        //print('Results: ${response.body}');
+        Map<String, dynamic> data = jsonDecode(response.body);
+        Map<String, dynamic> songdata = data['song'];
 
-          Song newChart = Song.fromJson(songdata);
-          setState(() {
-            songs[entry.mapID] = newChart;
-            print('Total songs in charts: ${songs.length}');
-            print(
-                'Chart contains id of ${entry.mapID}: ${getSongInfo(entry.mapID)!.name}');
-          });
-        }
+        Song newChart = Song.fromJson(songdata);
+        setState(() {
+          songs[entry.mapID] = newChart;
+          print('Total songs in charts: ${songs.length}');
+          print(
+              'Chart contains id of ${entry.mapID}: ${getSongInfo(entry.mapID)!.name}');
+        });
       }
       return '';
     } catch (error) {
@@ -223,23 +232,28 @@ class _HomeState extends State<Home> {
 
   Future<String> fetchPlayerData(String uid) async {
     try {
-      final response = await http.get(Uri.parse(apiURL + uid));
+      print('Sending: $apiURL/player/$uid');
+      final response = await http.get(Uri.parse('$apiURL/player/$uid'));
 
       if (response.statusCode == 200) {
         final playerJson = jsonDecode(response.body);
 
         int totalScore = 0;
+        List<Future> futures = [];
         for (int i = 0; i < widget.qualifiers.length; i++) {
-          print(
-              'Sending: ${apiURL + uid}/scorevalue/${getSongInfo(widget.qualifiers[i].mapID)!.hash}/${widget.qualifiers[i].mapDifficulty}/${widget.qualifiers[i].mapMode}');
-          final scoreResult = await http.get(Uri.parse(
-              '${apiURL + uid}/scorevalue/${getSongInfo(widget.qualifiers[i].mapID)!.hash}/${widget.qualifiers[i].mapDifficulty}/${widget.qualifiers[i].mapMode}'));
-          if (scoreResult.statusCode == 200) {
-            totalScore = totalScore + int.tryParse(scoreResult.body)!;
-          } else {
-            print('Error getting score for ${widget.qualifiers[i].mapID}');
-          }
+          String request =
+              '$apiURL/player/$uid/scorevalue/${getSongInfo(widget.qualifiers[i].mapID)!.hash}/${widget.qualifiers[i].mapDifficulty}/${widget.qualifiers[i].mapMode}';
+          futures.add(http.get(Uri.parse(request)).then((scoreResult) {
+            if (scoreResult.statusCode == 200) {
+              totalScore = totalScore + int.tryParse(scoreResult.body)!;
+            } else {
+              print('Error getting score for ${widget.qualifiers[i].mapID}');
+            }
+          }));
         }
+
+        await Future.wait(futures);
+
         User newUser = User.fromJson(playerJson);
 
         newUser.qualifierScore = totalScore;
