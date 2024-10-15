@@ -109,7 +109,7 @@ You can display inline code with backticks like `print('Hi!');`.
                 child: Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'How to Enter',
+                'Info',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             )),

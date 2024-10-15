@@ -207,8 +207,7 @@ class CustomListItem extends StatelessWidget {
 
   // this is just to open a sub page when tapping/clicking on the widget
   Future<void> displaySubPage(BuildContext context, String index) async {
-    await Navigator.push(context,
-        MaterialPageRoute(builder: (context) => SubPage(index: index)));
+    // await Navigator.push(context, MaterialPageRoute(builder: (context) => SubPage(index: index)));
   }
 
   Song? getSongInfo(String songID) {

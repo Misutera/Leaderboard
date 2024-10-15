@@ -11,6 +11,9 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
       name: json['name'] as String,
       avatar: json['avatar'] as String,
       qualifierScore: (json['qualifierScore'] as num?)?.toInt() ?? 0,
+      score: (json['score'] as List<dynamic>?)
+          ?.map((e) => Score.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
@@ -18,20 +21,25 @@ Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
       'name': instance.name,
       'avatar': instance.avatar,
       'qualifierScore': instance.qualifierScore,
+      'score': instance.score,
     };
 
 Score _$ScoreFromJson(Map<String, dynamic> json) => Score(
+      id: json['id'] as String,
       hash: json['hash'] as String,
       difficulty: json['difficulty'] as String,
       mode: json['mode'] as String,
       score: (json['score'] as num).toInt(),
+      songData: Song.fromJson(json['songData'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$ScoreToJson(Score instance) => <String, dynamic>{
+      'id': instance.id,
       'hash': instance.hash,
       'difficulty': instance.difficulty,
       'mode': instance.mode,
       'score': instance.score,
+      'songData': instance.songData,
     };
 
 Qualifier _$QualifierFromJson(Map<String, dynamic> json) => Qualifier(

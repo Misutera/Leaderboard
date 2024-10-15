@@ -33,30 +33,20 @@ class Home extends StatefulWidget {
 
   // Map pool
   final List<Qualifier> qualifiers = [
-    // Powerful
-    Qualifier(
-        mapID: '18f6291', mapDifficulty: 'ExpertPlus', mapMode: 'Standard'),
+    // K/DA - PPO/STARS
+    Qualifier(mapID: '28f8d71', mapDifficulty: 'Expert', mapMode: 'Standard'),
 
-    // Super Idol
-    Qualifier(
-        mapID: '1dcd791', mapDifficulty: 'ExpertPlus', mapMode: 'Standard'),
+    // Blue Archive - Usagi Flap
+    Qualifier(mapID: '3ae08x51', mapDifficulty: 'Hard', mapMode: 'Standard'),
 
-    // Ov Sacrament
-    Qualifier(
-        mapID: 'c32d91', mapDifficulty: 'ExpertPlus', mapMode: 'Standard'),
+    // INTERSECTION - Falling (PSYQUI Remix)
+    Qualifier(mapID: '1685871', mapDifficulty: 'Expert', mapMode: 'Standard'),
 
-    // Ov Sacrament
-    Qualifier(mapID: 'c32d71', mapDifficulty: 'Expert', mapMode: 'Standard'),
+    // YOASOBI - Idol
+    Qualifier(mapID: '33321xx51', mapDifficulty: 'Hard', mapMode: 'Standard'),
 
-    // Silentphobia
-    Qualifier(mapID: '1b7bf71', mapDifficulty: 'Expert', mapMode: 'Standard'),
-
-    // HYPER ULTRA JACKPOT
-    Qualifier(
-        mapID: '39bc391', mapDifficulty: 'ExpertPlus', mapMode: 'Standard'),
-
-    // HYPER ULTRA JACKPOT
-    Qualifier(mapID: '39bc371', mapDifficulty: 'Expert', mapMode: 'Standard')
+    // NewJeans - Ditto
+    Qualifier(mapID: '2e3e671', mapDifficulty: 'Expert', mapMode: 'Standard')
   ];
 
   // ===========================================
@@ -65,7 +55,7 @@ class Home extends StatefulWidget {
   State<Home> createState() => _HomeState();
 }
 
-Widget title(String qualifiedQuota) {
+Widget title(String qualifiedQuota, BuildContext context) {
   return Padding(
     padding: const EdgeInsets.all(40.0),
     child: Column(
@@ -74,10 +64,13 @@ Widget title(String qualifiedQuota) {
         Text(
           'Top $qualifiedQuota Qualifies for VRGI\'s',
         ),
-        const Text(
-          'Beat Saber Tournament',
+        Text(
+          MediaQuery.of(context).size.width < 550
+              ? 'BSIC 2024'
+              : 'Beat Saber Indonesia Competition',
           textAlign: TextAlign.center,
-          style: TextStyle(
+          maxLines: 2,
+          style: const TextStyle(
             fontSize: 40,
             fontWeight: FontWeight.bold,
           ),
@@ -113,7 +106,7 @@ Widget buttons(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 10),
           child: ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -123,10 +116,10 @@ Widget buttons(
                   ),
                 );
               },
-              child: const Text('How to enter')),
+              child: const Text('Info')),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 10),
           child: ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -137,7 +130,7 @@ Widget buttons(
                               qualifiers: qualifiers,
                             )));
               },
-              child: const Text('Map Pool ->')),
+              child: const Text('Map Pool')),
         ),
       ],
     ),
@@ -156,7 +149,7 @@ class _HomeState extends State<Home> {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          title(widget.qualifiedQuota.toString()),
+          title(widget.qualifiedQuota.toString(), context),
           buttons(context, songs, widget.qualifiers),
           leaderboardCard(users, widget.qualifiedQuota, loadingText),
         ],
@@ -223,6 +216,9 @@ class _HomeState extends State<Home> {
               'Chart contains id of ${entry.mapID}: ${getSongInfo(entry.mapID)!.name}');
         });
       }
+      songs.forEach((key, song) {
+        print('$key: ${song.name}');
+      });
       return '';
     } catch (error) {
       print('Error while fetching map datas! $error');
@@ -240,12 +236,21 @@ class _HomeState extends State<Home> {
 
         int totalScore = 0;
         List<Future> futures = [];
+        List<Score> scores = [];
         for (int i = 0; i < widget.qualifiers.length; i++) {
           String request =
               '$apiURL/player/$uid/scorevalue/${getSongInfo(widget.qualifiers[i].mapID)!.hash}/${widget.qualifiers[i].mapDifficulty}/${widget.qualifiers[i].mapMode}';
           futures.add(http.get(Uri.parse(request)).then((scoreResult) {
             if (scoreResult.statusCode == 200) {
               totalScore = totalScore + int.tryParse(scoreResult.body)!;
+              Score score = Score(
+                  id: widget.qualifiers[i].mapID,
+                  hash: getSongInfo(widget.qualifiers[i].mapID)!.hash,
+                  difficulty: widget.qualifiers[i].mapDifficulty,
+                  mode: widget.qualifiers[i].mapMode,
+                  score: int.tryParse(scoreResult.body)!,
+                  songData: songs[widget.qualifiers[i].mapID]!);
+              scores.add(score);
             } else {
               print('Error getting score for ${widget.qualifiers[i].mapID}');
             }
@@ -257,6 +262,7 @@ class _HomeState extends State<Home> {
         User newUser = User.fromJson(playerJson);
 
         newUser.qualifierScore = totalScore;
+        newUser.score = scores;
 
         setState(() {
           print('adding new user');

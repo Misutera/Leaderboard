@@ -102,81 +102,85 @@ class _Content extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        child: SizedBox(
-          height: 100,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (image != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(15),
-                  child: Image(
-                    image: image!.image,
-                    fit: BoxFit.cover,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Card(
+          clipBehavior: Clip.antiAlias,
+          child: SizedBox(
+            height: 100,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (image != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(15),
+                    child: Image(
+                      image: image!.image,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.black.withOpacity(0.7),
+                        Colors.transparent,
+                      ],
+                    ),
                   ),
                 ),
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.black.withOpacity(0.7),
-                      Colors.transparent,
-                    ],
+                BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: SizedBox(
+                    height: 100,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        SizedBox(
+                          width: 45,
+                          child: Center(
+                            child: Text(
+                              rank.toString(),
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color:
+                                      rank <= quota ? Colors.green[400] : null),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(5.0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(15),
+                            child: AspectRatio(
+                              aspectRatio: 1.0,
+                              child: image ??
+                                  const Icon(
+                                      Icons.image_not_supported_outlined),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(20.0, 5.0, 2.0, 5.0),
+                            child: _Description(
+                              title: title,
+                              subtitle: subtitle,
+                              subfooter: subfooter,
+                              footer: footer,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: SizedBox(
-                  height: 100,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      SizedBox(
-                        width: 45,
-                        child: Center(
-                          child: Text(
-                            rank.toString(),
-                            style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color:
-                                    rank <= quota ? Colors.green[400] : null),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(5.0),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(15),
-                          child: AspectRatio(
-                            aspectRatio: 1.0,
-                            child: image ??
-                                const Icon(Icons.image_not_supported_outlined),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding:
-                              const EdgeInsets.fromLTRB(20.0, 5.0, 2.0, 5.0),
-                          child: _Description(
-                            title: title,
-                            subtitle: subtitle,
-                            subfooter: subfooter,
-                            footer: footer,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -213,9 +217,13 @@ class CustomListItem extends StatelessWidget {
   final String loadingText;
 
   // this is just to open a sub page when tapping/clicking on the widget
-  Future<void> displaySubPage(BuildContext context, int index) async {
-    await Navigator.push(context,
-        MaterialPageRoute(builder: (context) => SubPage(index: index)));
+  Future<void> displaySubPage(BuildContext context, User user) async {
+    await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => SubPage(
+                  user: user,
+                )));
   }
 
   @override
@@ -225,7 +233,7 @@ class CustomListItem extends StatelessWidget {
     return totalItemCount == 0
         ? loadingText.isEmpty
             ? const Center(
-                child: Text('No data'),
+                child: Text('No Participants :('),
               )
             : Center(
                 child: Text(loadingText),
@@ -252,7 +260,7 @@ class CustomListItem extends StatelessWidget {
                     footer: 'bbb',
                   ),
                   onTap: () {
-                    displaySubPage(context, index);
+                    displaySubPage(context, user);
                   },
                 );
               },
@@ -261,17 +269,170 @@ class CustomListItem extends StatelessWidget {
   }
 }
 
-// TODO: Placeholder Subpage. Implement a proper Subpage.
+class _MiniContent extends StatelessWidget {
+  const _MiniContent({
+    required this.title,
+    required this.subtitle,
+    required this.subfooter,
+    required this.footer,
+    this.image,
+  });
+
+  final String title;
+  final String subtitle;
+  final String subfooter;
+  final String footer;
+  final Image? image;
+
+  Widget imagePic(Image image) {
+    return image;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: SizedBox(
+          height: 100,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (image != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: Image(
+                    image: image!.image,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.black.withOpacity(0.7),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+              BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: SizedBox(
+                  height: 100,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Padding(
+                        padding: const EdgeInsets.all(5.0),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(15),
+                          child: AspectRatio(
+                            aspectRatio: 1.0,
+                            child: image ??
+                                const Icon(Icons.image_not_supported_outlined),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding:
+                              const EdgeInsets.fromLTRB(20.0, 5.0, 2.0, 5.0),
+                          child: _Description(
+                            title: title,
+                            subtitle: subtitle,
+                            subfooter: subfooter,
+                            footer: footer,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class SubPage extends StatelessWidget {
-  const SubPage({super.key, required this.index});
-  final int index;
+  const SubPage({super.key, required this.user});
+  final User user;
+
+  Widget topWidget(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: SizedBox(
+          height: 50,
+          child: Row(children: [
+            IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: const Icon(Icons.arrow_back_ios_new_rounded)),
+            Expanded(
+                child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                user.name,
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            )),
+          ])),
+    );
+  }
+
+  Widget scorelist() {
+    return Expanded(
+      child: Center(
+        child: SizedBox(
+          width: 800,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ListView.builder(
+              padding: const EdgeInsets.all(10.0),
+              physics: const BouncingScrollPhysics(),
+              itemCount: user.score?.length,
+              itemBuilder: (BuildContext context, int index) {
+                Score score = user.score!.elementAt(index);
+                return _MiniContent(
+                  image: Image.network(score.songData.coverImage),
+                  title: score.songData.name,
+                  subtitle: score.score == 0
+                      ? '${score.difficulty}: No Submission yet'
+                      : '${score.difficulty}: ${score.score}',
+                  subfooter: 'aaa',
+                  footer: 'bbb',
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text('Index: $index'),
+      body: Center(
+        child: SizedBox(
+          width: 800,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              topWidget(context),
+              scorelist(),
+            ],
+          ),
+        ),
       ),
     );
   }
